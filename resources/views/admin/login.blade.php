@@ -262,13 +262,13 @@
 <script src="https://www.gstatic.com/firebasejs/8.3.2/firebase.js"></script>
 <script>
     var firebaseConfig = {
-        apiKey: "AIzaSyBAnS7S9mfjLn0Ht1lKZIjGmNmQmujbYLI",
-        authDomain: "qysmat-b40c2.firebaseapp.com",
-        projectId: "qysmat-b40c2",
-        storageBucket: "qysmat-b40c2.appspot.com",
-        messagingSenderId: "328575494525",
-        appId: "1:328575494525:web:2f66e61dfa741c3a044414",
-        measurementId: "G-VTS8N91KC0"
+        apiKey: "apiKey",
+        authDomain: "authDomain",
+        projectId: "projectId",
+        storageBucket: "storageBucket",
+        messagingSenderId: "messagingSenderId",
+        appId: "appId",
+        measurementId: "measurementId"
     };
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();

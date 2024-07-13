@@ -1469,7 +1469,7 @@ use App\Notifications\MutualMatchNotification;
 
         $FcmToken = AdminModel::whereNotNull('device_token')->pluck('device_token')->all();
             
-        $serverKey = 'AAAATICgKX0:APA91bHhUj1lJ3o_AX9PkU-il3O-qpZ8O2U7KvKv6nRD4xdjTVkQZBbrhXrhWMDgp6WxDvAG7rXqQb0wh8RUsZX8FO5dcLvgnbRRc343cxgEo8nA_MQkIcM08xK58qUadkAjrj_TBkaR'; // ADD SERVER KEY HERE PROVIDED BY FCM
+        $serverKey = Config::get('constants.FCM_KEY');
     
         $data = [
             "registration_ids" => $FcmToken,
