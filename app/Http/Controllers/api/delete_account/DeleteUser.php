@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Http\Controllers\api\delete_account;
+
+use App\Http\Controllers\Controller;
+use App\Models\Admin;
+use App\Models\DeletedUsers as ModelsDeletedUsers;
+use App\Notifications\AdminNotification;
+use App\Models\ParentsModel;
+use App\Models\Singleton;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+
+class DeleteUser extends Controller
+{
+    public function  __construct()
+    {
+        $lang = (isset($_POST['language']) && !empty($_POST['language'])) ? $_POST['language'] : 'en';
+        App::setlocale($lang);
+
+        if (isset($_POST['login_id']) && !empty($_POST['login_id']) && isset($_POST['user_type']) && !empty($_POST['user_type'])) {
+            userFound($_POST['login_id'], $_POST['user_type']);
+        }
+    }
+
+    public function index(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'language' => [
+                'required' ,
+                Rule::in(['en','hi','ur','bn','ar','in','ms','tr','fa','fr','de','es']),
+            ],
+            'login_id'      => 'required||numeric',
+            'reason_type'   => 'required',
+            'reason'        => 'required',
+            'user_type'     => [
+                                    'required' ,
+                                    Rule::in(['singleton','parent']),
+                                ],
+        ]);
+
+        if($validator->fails()){
+            return response()->json([
+                'status'    => 'failed',
+                'message'   => __('msg.Validation Failed!'),
+                'errors'    => $validator->errors()
+            ],400);
+        }
+
+        try {
+
+            if($request->user_type == 'singleton'){
+                $userExists = Singleton::find($request->login_id);
+            }else{
+                $userExists = ParentsModel::find($request->login_id);
+            }
+
+            $user = new ModelsDeletedUsers();
+            $user->user_id           = $request->login_id;
+            $user->user_type         = $request->user_type;
+            $user->user_name         = $userExists->name;
+            $user->reason_type       = $request->reason_type;
+            $user->reason            = $request->reason;
+            $user_details = $user->save();
+
+            if($user_details){
+                if($request->user_type == 'singleton'){
+                    $user = Singleton::find($request->login_id);
+                    $active_subscription_id = $user ? $user->active_subscription_id : '';
+                    $delete =  Singleton :: whereId($request->login_id)->delete();
+                    // $delete =  Singleton :: whereId($request->login_id)->update(['status' => 'Deleted', 'updated_at' => date('Y-m-d H:i:s')]);
+                }else{
+                    $user = ParentsModel::find($request->login_id);
+                    $active_subscription_id = $user ? $user->active_subscription_id : '';
+                    $delete =  ParentsModel :: whereId($request->login_id)->delete();
+                    // $delete =  ParentsModel :: whereId($request->login_id)->update(['status' => 'Deleted', 'updated_at' => date('Y-m-d H:i:s')]);
+                }
+                if ($delete) {
+
+                    deleteAccountDetails($request->login_id, $request->user_type, $active_subscription_id);
+
+                    $admin = Admin::find(1);
+
+                    $details = [
+                        'title' => __('msg.Account Deleted'),
+                        'msg'   => __('msg.has Deleted His/Her Account.'),
+                    ];
+
+                    $admin->notify(new AdminNotification($user, 'admin', 0, $details));
+
+                    return response()->json([
+                        'status'    => 'success',
+                        'message'   => __('msg.delete-account.success'),
+                        'data'      => $user
+                    ],200);
+                } else {
+                    return response()->json([
+                        'status'    => 'failed',
+                        'message'   => __('msg.delete-account.failure'),
+                    ],400);
+                }
+            }else{
+                return response()->json([
+                    'status'    => 'failed',
+                    'message'   => __('msg.delete-account.invalid'),
+                ],400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'    => 'failed',
+                'message'   => __('msg.error'),
+                'error'     => $e->getMessage()
+            ],500);
+        }
+    }
+}
