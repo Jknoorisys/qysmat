@@ -907,7 +907,7 @@ use App\Notifications\MutualMatchNotification;
         }
     }
 
-    function sendFCMNotifications($token, $title, $body, $data)
+    function sendFCMNotificationsOld($token, $title, $body, $data)
     {
         $client = new Client();
         $response = $client->post("https://fcm.googleapis.com/fcm/send", [
@@ -927,7 +927,7 @@ use App\Notifications\MutualMatchNotification;
         return $response->getBody()->getContents();
     }
 
-    function sendFCMNotificationsNew($fcm_token, $title, $body, $fcm_data)
+    function sendFCMNotifications($fcm_token, $title, $body, $fcm_data)
     {
         $project = "qysmat-6bad8";
         require_once 'vendor/autoload.php';
